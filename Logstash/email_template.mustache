@@ -1,0 +1,18 @@
+<h1>Alert : job(s) en erreur</h1>
+<a href='https://log.klipso-event.net/app/kibana#/discover/ccdac2f0-2b8e-11e9-8b64-edbe0ac7cf66' >lien vers kibana</a>
+<br />
+{{#details}}
+  {{#jobsInError}}
+<hr />
+{{evenement}} @{{instance}} : <ul>
+    {{#jobsInfos}}
+        <li>{{.}}</li>
+    {{/jobsInfos}}
+    </ul>
+  {{/jobsInError}}
+{{/details}}
+
+{{#empty}}
+  <p>The list is empty.</p>
+{{/empty}}
+<hr />

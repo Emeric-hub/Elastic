@@ -1,0 +1,56 @@
+
+#-------------------------------------------------------------
+#EDE - 13/11/2019
+# Recup Log Forti VPN SSL pour Suivi
+#-------------------------------------------------------------
+
+#---------------- Entrée sur port 514 (syslog) --------------
+input {
+	udp {
+		port => 514
+		codec => plain
+	}
+}
+#---------------- Traitement --------------
+filter {
+	mutate { gsub => [ "message", "[\n]", "" ] }
+	grok {
+		match => ["message", '<190>date=%{DATA:date} time=%{DATA:time} devname=\"%{DATA:devicename}\" devid=\"%{DATA:deviceid}\" logid=\"%{DATA:logid}\" type=\"%{DATA:type}\" subtype=\"%{DATA:subtype}\" level=\"%{DATA:level}\" vd=\"%{DATA:vd}\" eventtime=%{INT:eventime} logdesc=\"%{DATA:logdesc}\" action=\"%{DATA:action}\" tunneltype=\"%{DATA:tunneltype}\" tunnelid=%{INT:tunnelid} remip=%{IP:remip} user=\"%{DATA:user}\" group=\"%{DATA:group}\" dst_host=\"%{DATA:dst_group}\" reason=\"%{DATA:reason}\" msg=\"%{DATA:msg}\"']
+		add_tag => ["forti_vpn"]
+		tag_on_failure => ["parsing_failure"]
+	}
+}
+#---------------- Sortie Fichier --------------
+
+output {
+	#if "parsing_failure" in [tags] {
+		# Si besoin un jour pour debug.
+		#file {
+		#	path => "..\logs\%{+YYYY.MM.dd}-syslog.log"
+		#	codec => line
+		#}
+		#stdout {}
+	#} else {
+		if [action] == "tunnel-up" {
+			file {
+				path => "..\logs\PAR_USER\%{user}.log"
+				codec => line { format => "%{date} - %{time} - Connection VPN de %{user} sur %{devicename} a partir de %{remip}" }
+			}
+			file {
+				path => "..\logs\PAR_DEVICE\%{devicename}.log"
+				codec => line { format => "%{date} - %{time} - Connection VPN de %{user} sur %{devicename} a partir de %{remip}" }
+			}
+			file {
+				path => "..\logs\PAR_IP\%{remip}.log"
+				codec => line { format => "%{date} - %{time} - Connection VPN de %{user} sur %{devicename} a partir de %{remip}" }
+			}
+			# Full Log Output 
+			#file {
+			#	path => "..\logs\%{remip}\%{user}.log"
+			#	codec => line
+			#}
+		}
+		#stdout {}
+	#}
+
+}
